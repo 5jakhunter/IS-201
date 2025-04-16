@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shooting Range Game</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: white;
+      overflow: hidden;
+    }
+    h1 {
+      text-align: center;
+      margin: 10px 0;
+    }
+    #scoreboard {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 75vh;
+      background: #333;
+      border-top: 4px solid #fff;
+      overflow: hidden;
+    }
+    .target {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: red;
+      border-radius: 50%;
+      cursor: crosshair;
+      transition: background 0.2s;
+    }
+    .target:active {
+      background: yellow;
+    }
+    #startBtn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      display: none;
+      z-index: 10;
+    }
+    #gameOverScreen h2 {
+      margin: 10px 0;
+    }
+    #timer {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shooting Range</h1>
+  <div id="scoreboard">
+    Score: <span id="score">0</span> | High Score: <span id="highScore">0</span>
+  </div>
+  <div id="timer">Time Left: <span id="timeLeft">60</span>s</div>
+  <button id="startBtn">Start Game</button>
+  <div id="gameArea"></div>
+
+  <div id="gameOverScreen">
+    <h2>Game Over!</h2>
+    <p>Your Score: <span id="finalScore">0</span></p>
+    <p>High Score: <span id="finalHighScore">0</span></p>
+    <button onclick="startGame()">Play Again</button>
+  </div>
+
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const scoreDisplay = document.getElementById('score');
+    const highScoreDisplay = document.getElementById('highScore');
+    const timeLeftDisplay = document.getElementById('timeLeft');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScoreDisplay = document.getElementById('finalScore');
+    const finalHighScoreDisplay = document.getElementById('finalHighScore');
+    const startBtn = document.getElementById('startBtn');
+
+    let score = 0;
+    let highScore = localStorage.getItem('highScore') || 0;
+    let timeLeft = 60;
+    let targetInterval, countdownInterval;
+
+    highScoreDisplay.textContent = highScore;
+
+    function createTarget() {
+      const target = document.createElement('div');
+      target.classList.add('target');
+
+      const maxX = gameArea.clientWidth - 60;
+      const maxY = gameArea.clientHeight - 60;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      target.style.left = x + 'px';
+      target.style.top = y + 'px';
+
+      target.addEventListener('click', () => {
+        score++;
+        scoreDisplay.textContent = score;
+        gameArea.removeChild(target);
+      });
+
+      gameArea.appendChild(target);
+
+      setTimeout(() => {
+        if (gameArea.contains(target)) {
+          gameArea.removeChild(target);
+        }
+      }, 2000);
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 60;
+      scoreDisplay.textContent = score;
+      timeLeftDisplay.textContent = timeLeft;
+      gameArea.innerHTML = '';
+      gameOverScreen.style.display = 'none';
+      startBtn.style.display = 'none';
+
+      if (targetInterval) clearInterval(targetInterval);
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      targetInterval = setInterval(createTarget, 800);
+
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        timeLeftDisplay.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(targetInterval);
+      clearInterval(countdownInterval);
+
+      // Update high score
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('highScore', highScore);
+      }
+
+      finalScoreDisplay.textContent = score;
+      finalHighScoreDisplay.textContent = highScore;
+      highScoreDisplay.textContent = highScore;
+
+      gameOverScreen.style.display = 'flex';
+      startBtn.style.display = 'block';
+    }
+
+    startBtn.addEventListener('click', startGame);
+  </script>
+</body>
+</html>
